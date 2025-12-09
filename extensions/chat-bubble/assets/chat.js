@@ -465,6 +465,21 @@
      */
     API: {
       /**
+       * Get base URL for API requests.
+       * Prefer a configurable value from shopChatConfig, otherwise fall back to localhost.
+       * Trailing slashes are removed to simplify path concatenation.
+       * @returns {string}
+       */
+      getApiBaseUrl: function() {
+        const configuredBaseUrl = window.shopChatConfig?.apiBaseUrl;
+        const baseUrl = configuredBaseUrl && configuredBaseUrl.trim().length > 0
+          ? configuredBaseUrl.trim()
+          : 'https://localhost:3458';
+
+        // Remove trailing slash if present
+        return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      },
+      /**
        * Stream a response from the API
        * @param {string} userMessage - User's message text
        * @param {string} conversationId - Conversation ID for context
@@ -481,7 +496,7 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://localhost:3458/chat';
+          const streamUrl = this.getApiBaseUrl() + '/chat';
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -630,7 +645,8 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const historyUrl = this.getApiBaseUrl() +
+            `/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -779,8 +795,8 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
-              encodeURIComponent(conversationId);
+            const tokenUrl = ShopAIChat.API.getApiBaseUrl() +
+              '/auth/token-status?conversation_id=' + encodeURIComponent(conversationId);
             const response = await fetch(tokenUrl);
 
             if (!response.ok) {

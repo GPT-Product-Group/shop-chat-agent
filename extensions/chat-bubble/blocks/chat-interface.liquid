@@ -34,7 +34,8 @@
 <script>
   window.shopChatConfig = {
     promptType: {{ block.settings.system_prompt | json }},
-    welcomeMessage: {{ block.settings.welcome_message | json }}
+    welcomeMessage: {{ block.settings.welcome_message | json }},
+    apiBaseUrl: {{ block.settings.api_base_url | json }}
   };
   window.shopId = {{ shop.id }};
 </script>
@@ -71,6 +72,13 @@
         }
       ],
       "default": "standardAssistant"
+    },
+    {
+      "type": "text",
+      "id": "api_base_url",
+      "label": "API Base URL (optional)",
+      "info": "例如 https://lit-ability-angeles-staff.trycloudflare.com，留空则使用 https://localhost:3458",
+      "default": ""
     }
   ]
 }
