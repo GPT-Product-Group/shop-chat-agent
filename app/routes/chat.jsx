@@ -3,7 +3,7 @@
  * Handles chat interactions with Claude API and tools
  */
 import MCPClient from "../mcp-client";
-import { saveMessage, getConversationHistory, storeCustomerAccountUrls, getCustomerAccountUrls as getCustomerAccountUrlsFromDb } from "../db.server";
+import { saveMessage, getConversationHistory, storeCustomerAccountUrls, getCustomerAccountUrls as getCustomerAccountUrlsFromDb, getChatUserById } from "../db.server";
 import AppConfig from "../services/config.server";
 import { createSseStream } from "../services/streaming.server";
 import { createClaudeService } from "../services/claude.server";
@@ -80,6 +80,7 @@ async function handleChatRequest(request) {
     const conversationId = body.conversation_id || Date.now().toString();
     const promptType = body.prompt_type || AppConfig.api.defaultPromptType;
     const systemPromptOverride = body.system_prompt_override;
+    const userId = body.user_id; // 用户ID（可选）
 
     // Create a stream for the response
     const responseStream = createSseStream(async (stream) => {
@@ -89,6 +90,7 @@ async function handleChatRequest(request) {
         conversationId,
         promptType,
         systemPromptOverride,
+        userId,
         stream
       });
     });
@@ -112,6 +114,7 @@ async function handleChatRequest(request) {
  * @param {string} params.userMessage - The user's message
  * @param {string} params.conversationId - The conversation ID
  * @param {string} params.promptType - The prompt type
+ * @param {string} params.userId - The user ID (optional)
  * @param {Object} params.stream - Stream manager for sending responses
  */
 async function handleChatSession({
@@ -120,11 +123,26 @@ async function handleChatSession({
   conversationId,
   promptType,
   systemPromptOverride,
+  userId,
   stream
 }) {
   // Initialize services
   const claudeService = createClaudeService();
   const toolService = createToolService();
+
+  // 如果有用户ID，加载用户专属提示词
+  let effectiveSystemPrompt = systemPromptOverride;
+  if (userId) {
+    try {
+      const chatUser = await getChatUserById(userId);
+      if (chatUser?.currentPrompt) {
+        effectiveSystemPrompt = chatUser.currentPrompt;
+        console.log(`Using user-specific prompt for user: ${userId}`);
+      }
+    } catch (error) {
+      console.error('Error loading user prompt:', error);
+    }
+  }
 
   // Initialize MCP client
   const shopId = request.headers.get("X-Shopify-Shop-Id");
@@ -188,7 +206,7 @@ async function handleChatSession({
           messages: conversationHistory,
           promptType,
           tools: mcpClient.tools,
-          systemOverride: systemPromptOverride
+          systemOverride: effectiveSystemPrompt
         },
         {
           // Handle text chunks
