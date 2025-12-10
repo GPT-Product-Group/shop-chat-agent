@@ -41,6 +41,19 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
       ? systemOverride
       : getSystemPrompt(promptType);
 
+    // Log prompt usage for debugging/teaching
+    try {
+      console.log("======== Claude system prompt configuration ========");
+      console.log("Prompt type:", promptType);
+      console.log("Has override from frontend:", !!(systemOverride && systemOverride.trim().length > 0));
+      console.log("system prompt length:", systemInstruction ? systemInstruction.length : 0);
+      console.log("system prompt preview:", systemInstruction || "<empty>");
+      console.log("=====================================================");
+    } catch (e) {
+      // 日志本身出错时不要影响正常请求
+      console.warn("Failed to log system prompt configuration:", e?.message || e);
+    }
+
     // Create stream
     const stream = await anthropic.messages.stream({
       model: AppConfig.api.defaultModel,
