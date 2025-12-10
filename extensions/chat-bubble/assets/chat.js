@@ -490,10 +490,14 @@
 
         try {
           const promptType = window.shopChatConfig?.promptType || "standardAssistant";
+          const customSystemPrompt = window.shopChatConfig?.customSystemPrompt || "";
           const requestBody = JSON.stringify({
             message: userMessage,
             conversation_id: conversationId,
-            prompt_type: promptType
+            prompt_type: promptType,
+            system_prompt_override: customSystemPrompt && customSystemPrompt.trim() !== ''
+              ? customSystemPrompt
+              : undefined
           });
 
           const streamUrl = this.getApiBaseUrl() + '/chat';

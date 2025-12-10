@@ -35,7 +35,8 @@
   window.shopChatConfig = {
     promptType: {{ block.settings.system_prompt | json }},
     welcomeMessage: {{ block.settings.welcome_message | json }},
-    apiBaseUrl: {{ block.settings.api_base_url | json }}
+    apiBaseUrl: {{ block.settings.api_base_url | json }},
+    customSystemPrompt: {{ block.settings.custom_system_prompt | json }}
   };
   window.shopId = {{ shop.id }};
 </script>
@@ -78,6 +79,12 @@
       "id": "api_base_url",
       "label": "API Base URL (optional)",
       "info": "例如 https://lit-ability-angeles-staff.trycloudflare.com，留空则使用 https://localhost:3458"
+    },
+    {
+      "type": "textarea",
+      "id": "custom_system_prompt",
+      "label": "Custom system prompt (optional)",
+      "info": "如果填写，将覆盖所选的系统提示词（例如 standardAssistant）"
     }
   ]
 }

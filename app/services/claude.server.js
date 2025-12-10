@@ -33,10 +33,13 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
   const streamConversation = async ({
     messages,
     promptType = AppConfig.api.defaultPromptType,
-    tools
+    tools,
+    systemOverride
   }, streamHandlers) => {
-    // Get system prompt from configuration or use default
-    const systemInstruction = getSystemPrompt(promptType);
+    // Get system prompt from configuration or use an override if provided
+    const systemInstruction = systemOverride && systemOverride.trim().length > 0
+      ? systemOverride
+      : getSystemPrompt(promptType);
 
     // Create stream
     const stream = await anthropic.messages.stream({
